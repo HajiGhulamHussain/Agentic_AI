@@ -1,0 +1,177 @@
+🔹 1. import os
+
+Word: os = Operating System
+
+Line explain: ye Python ka built-in module hai jo tumhe apne computer ka OS access krny deta hai (jaise environment variables, file paths, folders handle krna).
+
+🔹 2. from dotenv import load_dotenv
+
+Word: dotenv = Dot Environment File
+
+Line explain: .env file say hidden/config variables (jaise API keys) load krny k liye use hota hai. Security aur flexibility k liye direct code main key likhny k bajaye .env file use hoti hai.
+
+🔹 3. from typing import cast
+
+Word: cast = Type Casting
+
+Line explain: Python ko batata hai k ek variable ko specific type (class/object) samjho. Ye type hints aur clarity k liye use hota hai, code chalane ke liye zaroori nahi hota.
+
+🔹 4. import chainlit as cl
+
+Word: chainlit = Chat framework
+
+Line explain: Chainlit ek library hai jo AI/chatbot apps bnany k liye use hoti hai. as cl ka matlab shortcut naam dena. Ab chainlit ko short form cl keh kr use kar skty ho.
+
+🔹 5. from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
+
+Word: agents = tumhari project ki agents wali library/module
+
+Line explain: yahan se 4 cheezen import ho rahi hain:
+
+Agent = chatbot/AI agent banany k liye class
+
+Runner = agent ko run krny ka manager
+
+AsyncOpenAI = async (non-blocking) OpenAI client
+
+OpenAIChatCompletionsModel = specific model handle krny ki class
+
+🔹 6. from agents.run import RunConfig
+
+Word: RunConfig = Run Configuration
+
+Line explain: ye agent k config (model, provider, tracing settings) set krny k liye class hai.
+
+🔹 7. load_dotenv
+
+Word: load_dotenv = Load Environment Variables
+
+Line explain: ye .env file say API keys aur configs load krta hai.
+
+(Note: Tumne parentheses bhool diye → load_dotenv() hona chahiye warna kaam nahi karega)
+
+🔹 8. api_key = os.getenv("OPENROUTER_API_KEY")
+
+Word: os.getenv = Get Environment Variable
+
+Line explain: .env file say "OPENROUTER_API_KEY" value uthata hai aur api_key variable main save krta hai.
+
+🔹 9. if not api_key: raise ValueError("key is not set plzz check .env file")
+
+Word: raise = Error uthao
+
+Line explain: agar key .env file main nahi mili tu error throw kr dega aur program ruk jayega.
+
+🔹 10. @cl.on_chat_start
+
+Word: decorator = Event trigger
+
+Line explain: ye ek event hai jo chatbot start hote hi chalega. Matlab jab user chatbot open karega to ye function run hoga.
+
+🔹 11. async def start():
+
+Word: async = asynchronous function
+
+Line explain: ek async function jo parallel/fast run hota hai bina program block kiye. Ye start event hai.
+
+🔹 12. external_client = AsyncOpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
+
+Word: external_client = External AI connection
+
+Line explain: OpenRouter API k liye OpenAI async client banata hai, jo key aur base URL k sath connect hoga.
+
+🔹 13. MODEL = OpenAIChatCompletionsModel(model="z-ai/glm-4.5-air:free", openai_client=external_client)
+
+Word: MODEL = selected AI model
+
+Line explain: ek specific AI model (glm-4.5-air:free) use krta hai aur external_client ko attach karta hai.
+
+🔹 14. config = RunConfig(model=MODEL, model_provider=external_client, tracing_disabled=True)
+
+Word: config = configuration settings
+
+Line explain: chatbot run k liye config bna raha hai (model, provider, tracing).
+
+🔹 15. cl.user_session.set("chat_history", [])
+
+Word: chat_history = conversation record
+
+Line explain: user ki session main empty history set kar raha hai jahan puri conversation save hogi.
+
+🔹 16. my_agent: Agent = Agent(name="Ravi Kumar", instructions="...")
+
+Word: Agent = chatbot brain
+
+Line explain: ek agent banata hai jo Roman Urdu main reply karega aur helpful hoga.
+
+🔹 17. await cl.Message(content="Welcome...").send()
+
+Word: await = wait for async action
+
+Line explain: user ko pehla welcome message bhejta hai.
+
+🔹 18. @cl.on_message
+
+Word: on_message = event listener
+
+Line explain: ye decorator batata hai k jab bhi user koi message bhejega tu ye function run hoga.
+
+🔹 19. history = cl.user_session.get("chat_history") or []
+
+Word: get = retrieve value
+
+Line explain: purana chat history nikalta hai, agar nahi mili tu empty list use krta hai.
+
+🔹 20. history.append({"role":"user", "content":message.content})
+
+Word: append = add new item
+
+Line explain: user ka naya message history main add kr deta hai.
+
+🔹 21. msg = cl.Message(content="")
+
+Word: msg = temporary response message
+
+Line explain: ek empty message object banata hai jisme AI ka jawab stream hoga.
+
+🔹 22. my_agent: Agent = cast(Agent, cl.user_session.get("my_agent"))
+
+Word: cast = force type
+
+Line explain: my_agent ko Agent type bna kar nikalta hai session say.
+
+🔹 23. result = Runner.run_streamed(my_agent, history, run_config=config)
+
+Word: Runner.run_streamed = run agent with streaming
+
+Line explain: agent ko history aur config k sath run karta hai aur live (streamed) response deta hai.
+
+🔹 24. async for event in result.stream_events():
+
+Word: stream_events = live tokens
+
+Line explain: AI ka response token by token (live typing jesa) stream hota hai.
+
+🔹 25. if event.type == "raw_response_event" and hasattr(event.data, 'delta'):
+
+Word: delta = response ka chunk
+
+Line explain: agar AI ne naya token bheja hai tu usay read karo.
+
+🔹 26. await msg.stream_token(token)
+
+Word: stream_token = live add token
+
+Line explain: AI ka word by word token message main stream krta hai user ko show karne k liye.
+
+🔹 27. history.append({"role":"assistant", "content": msg.content})
+
+Word: assistant = AI response
+
+Line explain: AI ka full reply chat history main save kar deta hai.
+
+🔹 28. except Exception as e: await msg.update(content=f"Error: {str(e)}")
+
+Word: Exception = error handling
+
+Line explain: agar koi error aa jaye to user ko error message bhej do aur console main print kro.
