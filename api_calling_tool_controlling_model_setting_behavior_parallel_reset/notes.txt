@@ -1,0 +1,178 @@
+controlling Tool using ModelSettings tool_use_behavior reset_tool_choice parallel_tool_choice
+
+# Note: All_agents
+# 1 agent as_tool
+# 2 tool_use_behavior ="run_llm_again" = "stop_on_first_tool" | StopAtTools
+# 3 model_settings=ModelSettings()
+
+agent as tool means agent ko tool bana k use kro jaisy koi main agent hai wahan py tool[] call kar k us ki list main 
+jo bhi agent hai jaisy my_Agent.as_tool() function call kar k us k parameter main tool_name aur tool_description bato jo 
+zrori hai 
+Example:
+            tools=[
+            my_Agent.as_tool
+            (tool_name="math_Assistant",
+            tool_description="you solve only math question"),
+        ]
+
+2nd full Example:
+                my_Agent_as_tool =Agent(
+                    name="my_Agent",
+                    instructions="You are a helpful assistant.",
+                    tools=[
+                        my_Agent.as_tool
+                        (
+                        tool_name="math_Assistant",
+                        tool_description="you solve only math question"),
+                    ])
+
+Note: ya work tbi kary ga jab open ai ki key ho ya us k sath kam karta hai 
+
+# 2 tool_use_behavior ="run_llm_again" = "stop_on_first_tool" 
+
+tool_use_behavior ="run_llm_again" 
+            
+          bydefault ya normal yahi hota hai iska mtlb ya k jo hum ny isko tool dia ya tool kr k phrr llm k pas jata hai 
+wahan say jawab achy tareeqy say refine ho k aata hai 
+
+cmd output: plus Tool Fire --->
+The answer is 7. Do you have more questions?
+
+iska mtlb jo answer aaya usko llm ny achy say refine kar k dia is line say smjh aaraha hai Do you have more questions?
+
+tool_use_behavior ="stop_on_first_tool" 
+            isko set krna hai k ya tool main jistrah hai usi trah answer la k do means wapis llm k pas mat lay jao tool 
+jo bhi answer aaya exit dy do 
+
+tool example aesa hai:
+            @function_tool
+def plus(n1: int, n2: int) -> str:
+    """
+    This is plus function
+        arg:
+            n1:int
+            n2:int
+        return str
+    """
+    print("plus Tool Fire --->")
+    return f"your answer is: {n1 + n2}"
+
+    tu ya f string k sath jo likha hai your answer is 7 bss yahi la k dy raha hai 
+    cmd output: plus Tool Fire --->
+                your answer is: 7
+
+    NOTE: simple stop on firt tool isi say smjh aaraha hai jo tool answer return kary wahi print kro refine k leye 
+    llm ko na bejo
+
+    3 StopAtTools
+
+    sab say pehly ya import hoga q k ya 1 class hai istrah import krna hai  
+    from agents.agent import StopAtTools
+
+    tool_use_behavior=StopAtTools(stop_at_tool_names=["multiply"])
+
+    istrah likhaingy multiply str main q k doc main bataya hai k ya str main likh dena hai 
+    ya kam aesy krta hai k jaisy multiply ka tool chaly ga apny flow ko trminate kar do ruk do 
+    is k elawa aur koi tool chaly masla nai lakin jab bhi multiply ka tool chaly ga tu ap apny flow ko ruk do usi 
+    poit py stop krna hai
+
+    ab main ny Runner ko ya input dia hai 
+    example:
+    result=Runner.run_sync(
+        my_Agent, 
+        input="2+5=? aur jo bhi answer aahy ga us main multiply kar do 10 ko",
+        run_config=Gemini_config
+    )
+print(result.final_output)
+            
+answer output:
+    plus Tool Fire --->
+    multiply Tool Fire --->
+    your answer is: 70 
+
+simple tha 2 tool jistrah kaha fire hogahy ab isi main 3ra tool karty hain dekty hain kia answer aata hai 
+
+example:
+        input="2+5=? jo bhi answer aahy ga us main multiply kar do 10 ko jo bhi answer aahy us main subtract kr do 10",
+    
+answer output:
+        plus Tool Fire --->
+        multiply Tool Fire --->
+        your answer is: 70
+
+NoTE: dekhain 3rd tool call nai howa multiply py hi ruk gaya jistrah hum ny dia tha StopAtTools["multiply] bss ruk gaya
+aur agar hum multiply k aagy plus ko bhi rakh dain tu ya plus py hi stop hojahy ga plus kar 
+
+
+3 model_settings=ModelSettings(tool_choice="auto")
+    from agents import ModelSettings  = pehly import karaingy
+
+is main zrori ya hai parameter tool_choice aur usko auto kar daingy tu llm k apny uper hai hai
+usko zrort parhny py tool khudi call kary ga jab zrort hogi bydefault auto hota hai
+
+answer output: plus Tool Fire --->
+               your answer is: 7
+
+iska mtlb tool plus call howa aur waheen terminate hogaya jaisa hum ny usko plus dia tha 
+llm ki marzi say tool call hogaya jitrah auto tha agar hum us main non daingy tu tool call nai hoga
+
+model_settings=ModelSettings(tool_choice="none")
+
+answer output:
+    Chaliye, ise step-by-step solve karte hain:
+
+1.  **Sab se pehle, hum 2 aur 5 ko jama (plus) karenge:**
+    `2 + 5 = 7`
+
+2.  **Ab jo jawab (7) aaya hai, usay 10 se zarb (multiply) karenge:**
+    `7 * 10 = 70`
+
+3.  **Aakhri mein, jo naya jawab (70) aaya hai, us mein se 10 nafi (subtract) karenge:**
+    `70 - 10 = 60`
+
+Tou aapka aakhri jawab hai: **60**
+
+
+model_settings=ModelSettings(tool_choice="required")
+
+required is main zrori hai tool call ho jab k hum ny input main hello dia jis say ya pata 
+chlta hai k tool call ki zrort nai phrr bhi call kar k anwer dia  
+
+answer output:
+        plus Tool Fire --->
+        your answer is: 3
+
+
+model_settings=ModelSettings(tool_choice="multiply")
+
+ab hum ny isko choice main multiply dy dia hai aur anput main 2+5=? dia hai jo k plus krta hai 
+
+answer output:
+        multiply Tool Fire --->
+        your answer is: 10
+
+parallel_tool_choice= True aur False
+reset_tool_choice= True aur False
+# parallel tool call True matlb 2 ya do say ziyada tool call karny ki ijazat di hai apny 
+# reset tool choice True or False means Tool ko reset krna 
+
+hum ny tool_choice main subtract dia jo k stop_at_tool_names plus multiply main say nai tha 
+alag tha tu bar bar subtract reset howa 10 bar loop chalaya print howa istrah agar wo value 
+hoti plus multiply tu istrah nai hota q k stop tool k ander hai tu wo plus tool chalta 1 bar 
+
+subtract answer output
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+            subtract Tool Fire --->
+aur agar hum isko Runner k ander max_turn=4 dain tu ya 4 bar chaly 
+
+ab hum ny isko agar reset tool ko True kia tu ya gaya llm k pas gaya kaha llm ny k chalany 
+ki zrort nai plus ka tool bad main chala dia
+
