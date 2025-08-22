@@ -1,0 +1,238 @@
+HandsOff
+
+1st import class 
+from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+
+
+2 handoff [] list main aahy ga nechy dekh sakty hain istrah 
+
+  assistant =Agent(
+      name="Assistant",
+      instructions="You are a helpful assistant.",
+      handoffs=[Math_Agent,English_Agent]
+  )
+
+3 phr is k bad jo agent dia hai Handoffs main jaisay hamary case main Math_Agent hai
+
+    Math_Agent =Agent(
+    name="Math Teacher",
+    instructions=f"""{RECOMMENDED_PROMPT_PREFIX} You are a helpful math teacher.",""",
+    tools=[plus],
+    handoff_description="This is a math teacher",
+)
+
+important Note:
+        abi hum ny ya 3 alag alag prompt deye Agent ko us ny usi ko call kia jo us quarry k leye
+        perfect tha.
+Prompt:
+    1 input="2+2=?",
+    2 input="what is fundamental of english answer in short 1 line",
+    3 input="Hello",
+
+answer outPut:
+   1 plus Tool Fire --->
+     Agent Name: Math Teacher
+     The answer to 2 + 5 is 7.
+
+    2 Agent Name: English Teacher
+      The fundamentals of English involve mastering grammar, vocabulary, pronunciation, and the 
+      four core skills: reading, writing, listening, and speaking.
+
+    3 Agent Name: Assistant
+      Hello! How can I help you today?
+
+normal jawab tha tu assistant ny khud hi dy dia
+
+🟢 Handoffs ka matlab
+
+handoffs ka matlab hota hai:
+
+➡️ ek main agent (Assistant) ke paas chhote-chhote specialist agents hote hain.
+➡️ jab user koi sawaal karta hai, agar woh sawaal ek specialist agent ka kaam hai, to main agent us sawaal ko usi agent ko “handoff” kar deta hai.
+
+jaise school ka example lo:
+
+👩‍🏫 Math Teacher sirf Maths padhayega
+
+👩‍🏫 English Teacher sirf English padhayega
+
+👨‍💼 Assistant (Receptionist jaisa) user ka sawaal suntay hi decide karega:
+
+agar sawaal Maths ka hai → Math Teacher ko bhej do
+
+agar sawaal English ka hai → English Teacher ko bhej do
+
+agar dono na ho to khud jawab do
+
+🟢 handoff_description
+
+handoff_description ek chhoti si description hoti hai jo Assistant ko batati hai ki ye agent kis kaam ka expert hai.
+
+Example:
+
+handoff_description="This is a math teacher"
+
+
+iska matlab hai: agar user ka sawaal Math related hoga to Assistant yeh agent use karega.
+
+🟢 Tumhara Code Samjhna
+from agents import Agent
+from new_tools.math_toolss import plus, subtract, multiply, divide
+from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+
+
+Agent import kia → yeh class agents banane ke liye hai.
+
+math_tools se tools import kiye → jaise plus, subtract etc. (yeh functions hain jo Maths solve karte hain).
+
+RECOMMENDED_PROMPT_PREFIX → ek pre-written prompt hai jo Assistant ko guide karta hai kaise handoff karna hai.
+
+🟢 Math Agent
+Math_Agent = Agent(
+    name="Math Teacher",
+    instructions=f"""{RECOMMENDED_PROMPT_PREFIX} You are a helpful math teacher.""",
+    tools=[plus],
+    handoff_description="This is a math teacher",
+)
+
+
+➡️ iska matlab:
+
+Name: Math Teacher
+
+Instructions: Tum ek helpful math teacher ho.
+
+Tools: ye agent plus function use kar sakta hai.
+
+handoff_description: Assistant ko hint milta hai ke yeh sirf Maths ke liye hai.
+
+🟢 English Agent
+English_Agent = Agent(
+    name="English Teacher",
+    instructions=f"""{RECOMMENDED_PROMPT_PREFIX} You are a helpful English teacher.""",
+    tools=[plus],  # yahan tools galti se plus diya hai, ideally yahan English ke tools hone chahiye
+    handoff_description="This is a english teacher"
+)
+
+
+➡️ iska matlab:
+
+Name: English Teacher
+
+Instructions: Tum ek helpful English teacher ho.
+
+handoff_description: Sirf English ke sawalat ke liye use hoga.
+
+🟢 Main Assistant Agent
+assistant = Agent(
+    name="Assistant",
+    instructions="You are a helpful assistant.",
+    handoffs=[Math_Agent, English_Agent]
+)
+
+
+➡️ iska matlab:
+
+Assistant ek receptionist hai.
+
+Iske paas handoffs list me 2 agents hain → Math Teacher aur English Teacher.
+
+Jab user kuch poochega, Assistant dekhega kaunsa agent best fit hai.
+
+🟢 Run Code
+result = Runner.run_sync(
+    assistant,
+    input="Hello",
+    run_config=Gemini_config,
+)
+
+print(f"Agent Name: {result.last_agent.name}")  
+print(result.final_output)
+
+
+➡️ Jab input "Hello" diya, Assistant dekhega:
+
+Kya yeh Math hai? ❌
+
+Kya yeh English grammar ka question hai? ❌
+
+To fir Assistant khud jawab dega ✅
+
+Output kuch is tarah hoga:
+
+Agent Name: Assistant
+Hello! How can I help you today?
+
+🟢 Agar input "2+2=?" dete
+
+Assistant samjhega yeh Math ka sawal hai → Math_Agent ko handoff kar dega.
+
+Math_Agent tool plus use karega aur jawab dega: 4.
+
+Output:
+
+Agent Name: Math Teacher
+4
+
+🟢 Agar input "What is fundamental of English?" dete
+
+Assistant samjhega yeh English ka sawal hai → English_Agent ko handoff kar dega.
+
+English_Agent jawab dega.
+
+Output:
+
+Agent Name: English Teacher
+The fundamental of English is grammar and vocabulary.
+
+
+✅ To simple lafzon me:
+handoffs = ek helper ke paas aur chhote helpers hote hain, jo apne apne kaam me expert hote hain. Assistant user ka sawal sun kar decide karta hai kis helper ko kaam dena hai.
+
+📌 Handoffs Kya Hote Hain?
+
+OpenAI Agents SDK ya Gemini API main handoffs ka matlab hai:
+👉 ek agent apna kaam chhod kar dusre agent ko kaam forward kar deta hai.
+
+Yani agar ek agent kisi kaam ke liye bana hi nahi hai, wo apna kaam dusre agent ko de dega jo us kaam main expert hai.
+
+🎒 Real Life Example (Bacho ki trah samajhne ke liye)
+
+Socho ek school hai jahan 3 teachers hain:
+
+👨‍🏫 Math Teacher → Maths ke sawalat solve karta hai.
+
+👩‍🏫 English Teacher → English ke sawalat solve karta hai.
+
+👨‍💼 Assistant Teacher → Pehle student ka sawal suntay hain, phir decide karte hain:
+
+Agar question Maths ka hai → Math Teacher ko handoff kar dete hain.
+
+Agar question English ka hai → English Teacher ko handoff kar dete hain.
+
+Agar question simple hai → khud jawab dete hain.
+
+👉 Yani Assistant Teacher ek dispatcher ya traffic police ki tarah hai jo decide karta hai kaunsa sawal kisko dena hai.
+Is "pass kar dena" ko hi handoff kehte hain ✅.
+
+important Note:
+        abi hum ny ya 3 alag alag prompt deye Agent ko us ny usi ko call kia jo us quarry k leye
+        perfect tha.
+Prompt:
+    1 input="2+2=?",
+    2 input="what is fundamental of english answer in short 1 line",
+    3 input="Hello",
+
+answer outPut:
+   1 plus Tool Fire --->
+     Agent Name: Math Teacher
+     The answer to 2 + 5 is 7.
+
+    2 Agent Name: English Teacher
+      The fundamentals of English involve mastering grammar, vocabulary, pronunciation, and the 
+      four core skills: reading, writing, listening, and speaking.
+
+    3 Agent Name: Assistant
+      Hello! How can I help you today?
+
+normal jawab tha tu assistant ny khud hi dy dia
