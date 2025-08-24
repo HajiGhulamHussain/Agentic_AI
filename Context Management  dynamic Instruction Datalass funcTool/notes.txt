@@ -1,0 +1,231 @@
+Context Management
+
+          pure my words haji mind notes 
+
+aesi information jo LLM k pas nai hoti mutalif qisam ka data jo hum local provide kart hain
+tools k zarye system msg k zarye function k zarye
+
+1 local contaxt jo local available hota hai LLM k pas nai hota 
+2 llm ko jo bhi share krna chahahy kar skty hain
+
+local information jitni hamain llm ko dena hai bss utni hi dain jaisy name age dena hai aur 
+1 spacifik agent banana hai jaisy teacher ka agent name k sath role k sath 
+studeny ka data name role k sath 
+
+start work with practical:
+from agents import RunContextWrapper # sab say pehly ya class import hogi us k bad func banna hai
+
+@function_tool
+def get_age(ctx:RunContextWrapper):
+    """age function"""
+    print("age tool ---> ")
+    print("ctx ---> ", ctx.context) # get full dict
+    print("ctx by name ---> ", ctx.context["name"]) #get only name
+    return f"your age is {ctx.context["age"] }."
+
+2 us k bad Runner main context dena hai 
+context={"name": "Ratan Lal", "age":35, "role":"Teacher"}, #obj dict teacher
+context={"name": "chaman ", "age":19, "role":"student"}, #obj dict student
+
+3 phrr uski instruction apny hisab say dynamic set kar dain aur RunContextWrapper class pas kry
+ from agents import RunContextWrapper
+
+def dynamic_instruction(ctx: RunContextWrapper,agent):
+    return f"user name is {ctx.context['name']}, You are a helpful assistant"
+
+4 agent main ya pas krdain 
+        assistant =Agent(
+            name="Assistant",
+            instructions=dynamic_instruction,
+            tools=[get_age]
+        )
+
+phr run kar dain
+ 
+ab isko acha aur khubsoorat tareeqy say nazar aahy us k leye hum Schema banahaingy mtlb data class
+
+from dataclasses import dataclass
+              #schema data class
+              # @dataclass
+              # class UserDataType:
+              #     name:str
+              #     age:int
+              #     role:str
+
+ya phr pydantic say bhi bana skty hain 
+              # class UserDataType(BaseModel):
+              #   name:str
+              #   age:int
+              #   role:str 
+function:
+isko import kar daingy jahan hum ny function banaya hai wahan humary case main hum ny func
+contaxt_manage.py main banaya hai tu isko import "from user_Data.user_data import UserDataType"
+kary k bad jo function hai us k parameter main rakh daingy istrah aur isko generix kehty hain
+from user_Data.user_data import UserDataType
+
+@function_tool
+def get_age(ctx:RunContextWrapper[UserDataType]): # UserDataType aur isko hum generax kaheen gy
+agar hum data say kam karty hain tu uska name ya age koi bhi val get karny k leye 
+.laga k get karaingy means user age is {ctx.context.age} without data class 
+or pydantic humaesy get karty hain return f"your age is {ctx.context["age"] }.
+
+    """age function"""
+    print("age tool ---> ")
+    print("ctx ---> ", ctx.context) # get full dict
+    print("ctx by name ---> ", ctx.context.name) #get only name
+    return f"your age is {ctx.context.age }."
+
+
+Agent:
+aur ab agent ko bhi tu batana hoga tu us k leye hamain agent ki file jana hai wahan py import
+krna aur agent ki class k pass isko [UserDataType] generax ko pass kr dena simple.
+from user_Data.user_data import UserDataType
+
+assistant =Agent[UserDataType](
+    name="Assistant",
+    instructions=dynamic_instruction,
+    tools=[get_age]
+)
+
+dynamic instruction:
+is k bad dynamic instruction main bhi wahi data class import krna hai us k bad RunContextWrapper
+k pas UserDataType ko import karna hai agar hum data say kam karty hain tu uska nam ya koi bhi val
+get karny k leye .laga k get karaingy means .name example user name is {ctx.context.name}
+without data class or pydantic hum aesy get karty hain user name is {ctx.context['name']}
+aur is k pas agent main hum ny agent k sath generax dia usko hum parameter main pass kar daingy 
+aesy agent:Agent[UserDataType]
+
+
+from user_Data.user_data import UserDataType
+
+def dynamic_instruction(ctx: RunContextWrapper[UserDataType],agent:Agent[UserDataType]):
+    return f"""user name is {ctx.context.name} You are a helpful assistant"""
+
+Runner:
+from user_Data.user_data import UserDataType
+
+import karny k bad object banahaingy user_1 sy us k humny schema ki class banai the UserDataType
+wo pass karaingy usko argument daingy "name": "Haji Ghulam Hussain", "age":20, "role":"Student"
+
+example:
+    user_1 = UserDataType(name="Haji", age=20, role="student")
+
+ab hum user_1 ko context main pass kar daingy 
+
+result=Runner.run_sync(
+    assistant, 
+    input="Hello",
+    # context=["Haji Ghulam Hussain"], #str
+    # context=["Noman","chaman Lal"], #list
+    context=user_1, #obj
+    run_config=Gemini_config,
+
+    )
+print(result.final_output)
+
+
+
+
+
+This is from chat GPT notes
+
+RunContextWrapper
+        kesi bhi function ko ya class pass karna hoga tabi available hoga 
+🧠 Context Management
+
+👉 “Context” ka matlab hota hai background information.
+Socho aap school mein ho:
+
+Aapke pass ek copy hai jisme aap likh rahe ho (local notes).
+
+Teacher ko jo dikhana hai, wo alag copy hai (LLM ko dikhaya jata hai).
+
+Matlab do tarah ka context hota hai:
+
+1. Local Context (sirf tumhare computer ke liye)
+
+Ye wo data hai jo tumhare program ke andar hota hai.
+LLM (AI model) isko nahi dekh sakta.
+Sirf tum aur tumhara code isko use kar sakte ho.
+
+✅ Tum isme kya rakh sakte ho?
+
+Username / User ID
+
+Logger (jo print kare kya ho raha hai)
+
+Helper functions
+
+Socho tum apne dost ka naam aur roll number ek copy mein likh lete ho. Ye sirf tum dekh sakte ho, teacher ko ye wali copy nahi dikhayi ja rahi.
+
+📝 Example Code (local context)
+from dataclasses import dataclass
+from agents import Agent, RunContextWrapper, Runner, function_tool
+
+# Ek chhoti si copy jisme user ki info hai
+@dataclass
+class UserInfo:
+    name: str
+    uid: int
+
+# Ek tool jo local copy (context) se data nikal ke batata hai
+@function_tool
+async def fetch_user_age(wrapper: RunContextWrapper[UserInfo]) -> str:
+    return f"The user {wrapper.context.name} is 47 years old"
+
+async def main():
+    user_info = UserInfo(name="John", uid=123)
+
+    agent = Agent[UserInfo](
+        name="Assistant",
+        tools=[fetch_user_age],
+    )
+
+    result = await Runner.run(
+        starting_agent=agent,
+        input="What is the age of the user?",
+        context=user_info,   # 👈 yahan local copy pass kar di
+    )
+
+    print(result.final_output)  # Output: The user John is 47 years old
+
+
+👉 Is example mein John ka naam aur UID humne context mein dala.
+LLM ko directly John ka naam nahi diya, lekin jab tool call hua to wo context se naam nikal paya.
+
+2. Agent / LLM Context (jo AI ko dikh raha hai)
+
+Ye wo data hai jo AI model (LLM) ko actually dikhaya jata hai jab wo jawab likhta hai.
+
+Socho teacher ko tumhari exam answer sheet dikhayi ja rahi hai. Usme wahi likha hai jo tumne show karna chaha.
+
+✅ Ye context AI ko dene ke tareeqe:
+
+Agent instructions (system prompt) → Jaise teacher ko starting mein bolna:
+“John student hai, uske questions easy poochhna.”
+
+Input ke saath dena → Jaise exam paper ke upar likh do “Student: John”
+
+Tools se expose karna → Jab AI ko John ka naam ya data chahiye, to wo tool se puchh lega.
+
+Retrieval/Web search → Agar AI ko notes ya internet se kuch laana hai to wo fetch karke apne jawab mein use karega.
+
+🎯 Difference Simple Words mein
+Type	Kya hai?	Kisko dikh raha hai?	Example
+Local Context	Tumhari personal diary (program ke andar)	Sirf tum (LLM nahi dekh sakta)	John ka UID=123
+Agent/LLM Context	Exam answer sheet	Teacher (LLM)	“John is a student” likha hua hai sheet pe
+✅ Ek Real-Life Example
+
+Local Context: Tumhare phone mein contacts save hain → “Papa = 0300xxxxxxx”
+
+LLM Context: Tum AI se poochhte ho → “Papa ko message bhejo: main late aaunga”
+
+AI ko number nahi pata (wo local hai)
+
+Tool call hota hai, aur number local context se nikal ke use kar liya jata hai.
+
+👉 Simple bolun to:
+
+Local Context = Secret diary (sirf tumhari machine use karegi)
+
+LLM Context = Jo AI ko show karna hai (teacher ke exam paper ki tarah)
